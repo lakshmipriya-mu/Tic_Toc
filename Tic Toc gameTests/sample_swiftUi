@@ -1,0 +1,83 @@
+//
+//  ContentView.swift
+//  sampleSegmentContoll
+//
+//  Created by Lakshmi Priya on 6/1/23.
+//
+
+import SwiftUI
+extension View {
+  func readSize(onChange: @escaping (CGRect) -> Void) -> some View {
+    background(
+      GeometryReader { geometryProxy in
+        Color.clear
+              .preference(key: SizePreferenceKey.self, value: geometryProxy.frame(in: .global))
+      }
+    )
+    .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
+  }
+}
+
+private struct SizePreferenceKey: PreferenceKey {
+  static var defaultValue: CGRect = .zero
+  static func reduce(value: inout CGRect, nextValue: () -> CGRect) {}
+}
+
+struct CustomSegmentedPickerView: View {
+    @State private var selection = 0
+    private var titles = ["SwiftUI", "UIKit", "ML", "CV", "SwiftUI", "UIKit", "ML", "CV"]
+    private var colors = [Color.purple, Color.blue, Color.pink, Color.green, Color.purple, Color.blue, Color.pink, Color.green]
+    @State private var frames = Array<CGRect>(repeating: .zero, count: 8)
+    
+    var body: some View {
+        VStack {
+            ZStack {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(self.titles.indices, id: \.self) { index in
+                            Button(action: { self.selection = index }) {
+                                if self.selection == index {
+                                    Image("hottel").resizable().frame(width: 20, height: 20)
+                                    Text(self.titles[index])
+                                        .foregroundColor(.white)
+                                }else {
+                                    Text(self.titles[index])
+                                        .foregroundColor(.black)
+                                }
+                            }.padding(EdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20))
+                            .background(
+                                GeometryReader { geo in
+                                    Color.clear.onAppear {// self.setFrame(index: index, frame: geo.frame(in: .global))
+                                        
+                                    }
+                                }
+                            ).readSize { textSize in
+                                self.setFrame(index: index, frame: textSize)
+                            }
+                            
+                        }
+                    }
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .frame(width: self.frames[self.selection].width,
+                               height: self.frames[self.selection].height, alignment: .topLeading)
+                        .offset(x: self.frames[self.selection].minX - self.frames[0].minX)
+                        , alignment: .leading
+                    )
+                }.padding()
+            }
+            .animation(.default, value: selection)
+//            .background(Capsule().stroke(Color.purple, lineWidth: 3))
+        }
+    }
+    
+    func setFrame(index: Int, frame: CGRect) {
+        self.frames[index] = frame
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        CustomSegmentedPickerView()
+    }
+}
